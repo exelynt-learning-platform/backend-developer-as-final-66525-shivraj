@@ -13,6 +13,8 @@ import com.resource.bookingsystem.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Transactional
 public class ReservationService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
     private final ReservationRepository reservationRepository;
     private final ResourceRepository resourceRepository;
     private final UserRepository userRepository;
@@ -91,6 +94,7 @@ public class ReservationService {
 
         Reservation reservation = new Reservation(resource, user, status, finalPrice, request.startTime(), request.endTime());
         Reservation saved = reservationRepository.save(reservation);
+        log.info("Reservation created with id: {} for user: {}", saved.getId(), user.getEmail());
         return ReservationResponse.fromEntity(saved);
     }
 
@@ -136,6 +140,7 @@ public class ReservationService {
         }
 
         Reservation updated = reservationRepository.save(reservation);
+        log.info("Reservation updated with id: {}", updated.getId());
         return ReservationResponse.fromEntity(updated);
     }
 
@@ -148,6 +153,7 @@ public class ReservationService {
 
         reservation.setStatus(ReservationStatus.CANCELLED);
         Reservation saved = reservationRepository.save(reservation);
+        log.info("Reservation cancelled with id: {}", saved.getId());
         return ReservationResponse.fromEntity(saved);
     }
 
@@ -159,6 +165,7 @@ public class ReservationService {
         }
 
         reservationRepository.delete(reservation);
+        log.info("Reservation deleted with id: {}", id);
     }
 
     private void validateReservationTimes(LocalDateTime startTime, LocalDateTime endTime) {

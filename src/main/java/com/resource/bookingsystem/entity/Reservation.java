@@ -46,6 +46,13 @@ public class Reservation {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @jakarta.persistence.PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
     public Reservation() {
     }
 

@@ -34,6 +34,21 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @jakarta.persistence.PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+    }
+
+    @jakarta.persistence.PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
     public User() {
     }
 

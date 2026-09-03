@@ -6,6 +6,8 @@ import com.resource.bookingsystem.entity.Role;
 import com.resource.bookingsystem.entity.User;
 import com.resource.bookingsystem.repository.UserRepository;
 import com.resource.bookingsystem.security.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +19,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
@@ -34,6 +38,7 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        log.info("Attempting authentication for email: {}", request.email());
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
@@ -44,6 +49,7 @@ public class AuthService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+        log.info("User {} successfully authenticated with role: {}", user.getEmail(), user.getRole().name());
         return new AuthResponse(token, "Bearer", user.getEmail(), user.getRole().name());
     }
 
