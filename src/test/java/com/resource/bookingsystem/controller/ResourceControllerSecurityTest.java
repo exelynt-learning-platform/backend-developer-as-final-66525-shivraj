@@ -114,9 +114,9 @@ class ResourceControllerSecurityTest {
     }
 
     @Test
-    @DisplayName("Unauthenticated request to /resources should be rejected")
+    @DisplayName("Unauthenticated request to /resources should be rejected with 401 Unauthorized")
     void testUnauthenticatedAccessRejected() throws Exception {
         mockMvc.perform(get("/resources"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized());
     }
 }
