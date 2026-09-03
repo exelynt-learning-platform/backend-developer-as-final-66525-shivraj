@@ -4,9 +4,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,11 +22,13 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long resourceId;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "resource_id", nullable = false)
+    private Resource resource;
 
-    @Column(nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -33,16 +38,25 @@ public class Reservation {
     private BigDecimal price;
 
     @Column(nullable = false)
+    private LocalDateTime startTime;
+
+    @Column(nullable = false)
+    private LocalDateTime endTime;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     public Reservation() {
     }
 
-    public Reservation(Long resourceId, Long userId, ReservationStatus status, BigDecimal price) {
-        this.resourceId = resourceId;
-        this.userId = userId;
+    public Reservation(Resource resource, User user, ReservationStatus status, BigDecimal price,
+                       LocalDateTime startTime, LocalDateTime endTime) {
+        this.resource = resource;
+        this.user = user;
         this.status = status;
         this.price = price;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -54,20 +68,20 @@ public class Reservation {
         this.id = id;
     }
 
-    public Long getResourceId() {
-        return resourceId;
+    public Resource getResource() {
+        return resource;
     }
 
-    public void setResourceId(Long resourceId) {
-        this.resourceId = resourceId;
+    public void setResource(Resource resource) {
+        this.resource = resource;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public ReservationStatus getStatus() {
@@ -84,6 +98,22 @@ public class Reservation {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     public LocalDateTime getCreatedAt() {

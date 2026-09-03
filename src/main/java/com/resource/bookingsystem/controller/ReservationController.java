@@ -1,8 +1,9 @@
 package com.resource.bookingsystem.controller;
 
 import com.resource.bookingsystem.dto.ReservationRequest;
-import com.resource.bookingsystem.entity.Reservation;
+import com.resource.bookingsystem.dto.ReservationResponse;
 import com.resource.bookingsystem.entity.ReservationStatus;
+import com.resource.bookingsystem.entity.Role;
 import com.resource.bookingsystem.entity.User;
 import com.resource.bookingsystem.service.AuthService;
 import com.resource.bookingsystem.service.ReservationService;
@@ -38,7 +39,7 @@ public class ReservationController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<Page<Reservation>> getReservations(
+    public ResponseEntity<Page<ReservationResponse>> getReservations(
         @RequestParam(required = false) ReservationStatus status,
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice,
@@ -51,7 +52,7 @@ public class ReservationController {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, size, sort);
 
-        if (currentUser.getRole().name().equals("ADMIN")) {
+        if (currentUser.getRole() == Role.ADMIN) {
             return ResponseEntity.ok(reservationService.getReservationsForAdmin(pageable, status, minPrice, maxPrice));
         }
 
@@ -60,20 +61,15 @@ public class ReservationController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
-        Reservation reservation = reservationService.findById(id);
+    public ResponseEntity<ReservationResponse> getReservationById(@PathVariable Long id) {
         User currentUser = authService.getCurrentUser();
-
-        if (!currentUser.getRole().name().equals("ADMIN") && !reservation.getUserId().equals(currentUser.getId())) {
-            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
-        }
-
-        return ResponseEntity.ok(reservation);
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        return ResponseEntity.ok(reservationService.getReservationById(id, currentUser.getId(), isAdmin));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Reservation> createReservation(@Valid @RequestBody ReservationRequest request) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<ReservationResponse> createReservation(@Valid @RequestBody ReservationRequest request) {
         User currentUser = authService.getCurrentUser();
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(reservationService.createReservation(currentUser.getId(), request));
@@ -81,17 +77,26 @@ public class ReservationController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @Valid @RequestBody ReservationRequest request) {
+    public ResponseEntity<ReservationResponse> updateReservation(@PathVariable Long id,
+                                                                 @Valid @RequestBody ReservationRequest request) {
         User currentUser = authService.getCurrentUser();
-        boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
         return ResponseEntity.ok(reservationService.updateReservation(id, request, currentUser.getId(), isAdmin));
+    }
+
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<ReservationResponse> cancelReservation(@PathVariable Long id) {
+        User currentUser = authService.getCurrentUser();
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        return ResponseEntity.ok(reservationService.cancelReservation(id, currentUser.getId(), isAdmin));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
         User currentUser = authService.getCurrentUser();
-        boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
         reservationService.deleteReservation(id, currentUser.getId(), isAdmin);
         return ResponseEntity.noContent().build();
     }
